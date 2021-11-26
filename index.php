@@ -10,19 +10,21 @@ setlocale(LC_ALL, array('fi_FI.UTF-8','fi_FI@euro','fi_FI','finnish'));
 
 $today = date("Y-m-d");
 
-$participants = file_get_contents('participants.txt');
-$participants_exp = explode(PHP_EOL, $participants);
+$participants = file( 'participants.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ); // some names separated by newlines
 
-require 'winners_db.php'; /* database - containes default <?php $winners = []; ?> */
+$winners = json_decode( file_get_contents( 'winners.json' ), true );
+if ( !$winners || !is_array( $winners ) ) {
+    // first use, or a corrupt file, initiate to blank array
+    $winners = [];
+}
 
-if (date('m') == 12) {
-    if (!in_array($today, array_keys($winners))) {
-        shuffle($participants_exp);
-        $winners[$today] = $participants_exp;
-        $new_data = '$winners = ' . var_export($winners, true) . ';';
-        file_put_contents('winners_db.php', '<?php ' . $new_data . ' ?>'); // may god forgive me
+if ( date( 'm' ) == 12 ) {
+    if ( !array_key_exists( $today, $winners ) ) {
+        shuffle( $participants );
+        $winners[ $today ] = $participants;
+        file_put_contents( 'winners.json', json_encode( $winners ) ); // god is more pleased
     }
-    $todays_winners = $winners[$today];
+    $todays_winners = $winners[ $today ];
 }
 
 ?>
