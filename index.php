@@ -8,23 +8,39 @@ error_reporting(E_ALL);
 date_default_timezone_set('Europe/Helsinki');
 setlocale(LC_ALL, array('fi_FI.UTF-8','fi_FI@euro','fi_FI','finnish'));
 
-$today = date("Y-m-d");
-
 $participants = file( 'participants.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ); // some names separated by newlines
 
 $winners = json_decode( file_get_contents( 'winners.json' ), true );
+
 if ( !$winners || !is_array( $winners ) ) {
     // first use, or a corrupt file, initiate to blank array
     $winners = [];
 }
 
-if ( date( 'm' ) == 12 ) {
-    if ( !array_key_exists( $today, $winners ) ) {
+$today = date("Y-m-d");
+$date_req = $_GET['date'] ?? $today;
+$tomorrow = strtotime("+1 day", strtotime($date_req));
+$yesterday = strtotime("-1 day", strtotime($date_req));
+
+// Validate date
+$tempDate = explode('-', $date_req);
+// checkdate(month, day, year)
+if ( ! checkdate($tempDate[1], $tempDate[2], $tempDate[0]) ) die('Date not found!');
+
+// Check if a specific date was requested
+if (!empty($date_req) && !empty($winners)) {
+    if (array_key_exists($date_req, $winners)) {
+        $todays_winners = $winners[ $date_req ];
+    }
+}
+
+if ( date( 'm' ) === '12' && date('m', strtotime($date_req)) === '12') {
+    if ( !array_key_exists( $date_req, $winners ) ) {
         shuffle( $participants );
-        $winners[ $today ] = $participants;
+        $winners[ $date_req ] = $participants;
         file_put_contents( 'winners.json', json_encode( $winners ) ); // god is more pleased
     }
-    $todays_winners = $winners[ $today ];
+    $todays_winners = $winners[ $date_req ];
 }
 
 ?>
@@ -39,7 +55,11 @@ if ( date( 'm' ) == 12 ) {
 </head>
 <body>
 
-    <?php if (date('m') != 12) die("<h1>It's not December!</h1></body></html>"); ?>
+    <a href="<?php echo 'http://' . $_SERVER['SERVER_NAME'] . strtok($_SERVER['REQUEST_URI'], '?'). '?date=' . date('Y-m-d', $yesterday); ?>"><?php echo date("d-m-Y", $yesterday); ?></a>
+    | 
+    <a href="<?php echo 'http://' . $_SERVER['SERVER_NAME'] . strtok($_SERVER['REQUEST_URI'], '?') . '?date=' . date('Y-m-d', $tomorrow); ?>"><?php echo date("d-m-Y", $tomorrow); ?></a>
+
+    <?php if (date('m') !== '12' || date('m', strtotime($date_req)) !== '12' ) die("<h1>It's not December!</h1></body></html>"); ?>
     
     <h1>Who gets to open today's advent calendar?!?!?!?</h1>
     <h3>It's...</h3>
