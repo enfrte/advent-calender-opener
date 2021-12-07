@@ -56,7 +56,9 @@ if ( date( 'm' ) === '12' && date('m', strtotime($date_req)) === '12') {
 <body>
 
     <a href="<?php echo 'http://' . $_SERVER['SERVER_NAME'] . strtok($_SERVER['REQUEST_URI'], '?'). '?date=' . date('Y-m-d', $yesterday); ?>"><?php echo date("d-m-Y", $yesterday); ?></a>
-    | 
+    |
+    <span><strong><?php echo date('d-m-Y', strtotime($date_req)) ?></strong></span> 
+    |
     <a href="<?php echo 'http://' . $_SERVER['SERVER_NAME'] . strtok($_SERVER['REQUEST_URI'], '?') . '?date=' . date('Y-m-d', $tomorrow); ?>"><?php echo date("d-m-Y", $tomorrow); ?></a>
 
     <?php if (date('m') !== '12' || date('m', strtotime($date_req)) !== '12' ) die("<h1>It's not December!</h1></body></html>"); ?>
